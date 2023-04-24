@@ -1,0 +1,451 @@
+#include<stdio.h>
+#include<conio.h>
+#include<string.h>
+#include<stdlib.h>
+
+struct Date
+{
+    int ngay;
+    int thang; 
+    int nam;
+};
+
+
+struct Khachhang
+{
+    char tenKH[100];
+    int tuoi;
+    char gioiTinh[10];
+    char Sdt[15];
+};
+
+struct Hanghoa
+{
+    //char maSP[50];
+    char tenSP[50];
+    int soLuong;  //Khi tạo hàm nhớ phải có sự chỉnh sửa số lượng (vd: khi nhập 20 có khách hành mua 10 thì sl bây h là 10)
+    double giaBan;  //Giá bán mỗi sản phẩm
+};
+
+struct ChitietHoadon
+{
+    char maHoadon[50];
+    Hanghoa sanpham;
+    int soluong_mua;
+    double tien; //tien = soluong_mua * giaBan(1sp)
+};
+ 
+struct Hoadon
+{
+    char maHoadon[50];
+    Khachhang khachhang;
+    Date ngay_nhap;
+    ChitietHoadon *CTHD; // Con trỏ trỏ đến danh sách các chi tiết hóa đơn
+    int soLuongCTHD; // Số lượng chi tiết hóa đơn
+    double tongTien;
+};
+
+struct KH_Node
+{
+    Khachhang data;
+    KH_Node *next;
+};
+
+struct HH_Node
+{
+    Hanghoa data;
+    HH_Node *next;
+};
+
+struct CTHD_Node
+{
+    ChitietHoadon data;
+    CTHD_Node *next;
+};
+
+struct HD_Node
+{
+    Hoadon data;
+    HD_Node *next;
+};
+
+struct KH_List
+{
+    KH_Node *head;
+    KH_Node *tail;
+};
+
+struct HH_List
+{
+    HH_Node *head;
+    HH_Node *tail;
+};
+
+struct CTHD_List
+{
+    CTHD_Node *head;
+    CTHD_Node *tail;
+};
+
+struct HD_List
+{
+    HD_Node *head;
+    HD_Node *tail;
+};
+
+
+void init_KH(KH_List &ds)
+{
+    ds.head = NULL;
+    ds.tail = NULL;
+}
+
+void init_HH(HH_List &ds)
+{
+    ds.head = NULL;
+    ds.tail = NULL;
+}
+
+void init_CTHD(CTHD_List &ds)
+{
+    ds.head = NULL;
+    ds.tail = NULL;
+}
+
+void init_HD(HD_List &ds)
+{
+    ds.head = NULL;
+    ds.tail = NULL;
+}
+
+KH_Node *create_KH_Node(Khachhang dulieu)
+{
+    KH_Node *p = new KH_Node;
+    if (p == NULL)
+    {
+        printf("\nKhong du bo nho cap phat!");
+        return NULL;
+    }
+
+    p->data = dulieu;
+    p->next = NULL;
+
+    return p;
+}
+
+HH_Node *create_HH_Node(Hanghoa dulieu)
+{
+    HH_Node *p = new HH_Node;
+    if (p == NULL)
+    {
+        printf("\nKhong du bo nho cap phat!");
+        return NULL;
+    }
+
+    p->data = dulieu;
+    p->next = NULL;
+
+    return p;
+}
+
+HD_Node *create_HD_Node(Hoadon dulieu)
+{
+    HD_Node *p = new HD_Node;
+    if (p == NULL)
+    {
+        printf("\nKhong du bo nho cap phat!");
+        return NULL;
+    }
+
+    p->data = dulieu;
+    p->next = NULL;
+
+    return p;
+}
+
+CTHD_Node *create_CTHD_Node(ChitietHoadon dulieu)
+{
+    CTHD_Node *p = new CTHD_Node;
+    if (p == NULL)
+    {
+        printf("\nKhong du bo nho cap phat!");
+        return NULL;
+    }
+
+    p->data = dulieu;
+    p->next = NULL;
+
+    return p;
+}
+
+void ghiFIle_Khachhang(KH_List ds)
+{
+    FILE *f = fopen("Khachhang.txt", "w");
+    if (f == NULL)
+    {
+        printf("\nKhong mo duoc file");
+        _getch();
+        return;
+    }
+
+    for (KH_Node *k = ds.head; k != NULL; k = k->next)
+    {
+        fprintf(f, "%-20s %-10d %-10s %-20s\n", k->data.tenKH, k->data.tuoi, 
+                                            k->data.gioiTinh, k->data.Sdt);    
+    }
+
+    fclose(f);
+}
+
+void docFile_Khachhang(KH_List &ds, int *slg_KH)
+{
+    FILE *f = fopen("Khachhang.txt", "r");
+    if (f == NULL)
+    {
+        printf("\nKhong the mo file");
+        _getch();
+        return;
+    }
+
+    int ktra;
+    Khachhang dulieu;
+    KH_Node *tmp = ds.head;
+    
+    while ((ktra = fscanf(f, "%20s %10d %10s %20s", dulieu.tenKH, 
+                &dulieu.tuoi, dulieu.gioiTinh, dulieu.Sdt)) == 4)
+    {
+        KH_Node *p = create_KH_Node(dulieu);
+        int find = 0;
+        while (tmp != NULL)
+        {
+            if (strcmp(tmp->data.Sdt, p->data.Sdt) == 0)
+            {
+                find = 1;
+                free(p);
+                break;
+            }
+            tmp = tmp->next;
+        }
+
+        tmp = ds.head;
+        if (find != 1)
+        {
+            if (ds.head == NULL)
+            {
+                ds.head = ds.tail = p;
+            }
+            else
+            {
+                ds.tail->next = p;
+                ds.tail = p;
+            }
+            (*slg_KH)++;
+        }
+    }
+    fclose(f);
+}
+
+void ghiFIle_Hanghoa(HH_List ds)
+{
+    FILE *f = fopen("Hanghoa.txt", "w");
+    if (f == NULL)
+    {
+        printf("\nKhong mo duoc file");
+        _getch();
+        return;
+    }
+
+    for (HH_Node *k = ds.head; k != NULL; k = k->next)
+    {
+        fprintf(f, "%-20s %-10d %-20f\n", k->data.tenSP, k->data.soLuong, k->data.giaBan);    
+    }
+
+    fclose(f);
+}
+
+void docFile_Hanghoa(HH_List &ds, int *slg_HH)
+{
+    FILE *f = fopen("Hanghoa.txt", "r");
+    if (f == NULL)
+    {
+        printf("\nKhong the mo file");
+        _getch();
+        return;
+    }
+
+    int ktra;
+    Hanghoa dulieu;
+    HH_Node *tmp = ds.head;
+    
+    while ((ktra = fscanf(f, "%20s %10d %20f", dulieu.tenSP, &dulieu.soLuong, &dulieu.giaBan)) == 3)
+    {
+        HH_Node *p = create_HH_Node(dulieu);
+        int find = 0;
+        while (tmp != NULL)
+        {
+            if (strcmp(tmp->data.tenSP, p->data.tenSP) == 0)
+            {
+                find = 1;
+                free(p);
+                break;
+            }
+            tmp = tmp->next;
+        }
+
+        tmp = ds.head;
+        if (find != 1)
+        {
+            if (ds.head == NULL)
+            {
+                ds.head = ds.tail = p;
+            }
+            else
+            {
+                ds.tail->next = p;
+                ds.tail = p;
+            }
+            (*slg_HH)++;
+        }
+    }
+    fclose(f);
+}
+
+
+void ghiFIle_Hoadon(HD_List ds)
+{
+    FILE *f = fopen("Hoadon.txt", "w");
+    if (f == NULL)
+    {
+        printf("\nKhong mo duoc file");
+        _getch();
+        return;
+    }
+
+    for (HD_Node *k = ds.head; k != NULL; k = k->next)
+    {
+        fprintf(f, "%-20s %-20s %d/%d/%-10d %-20s %-10d %20f\n", k->data.maHoadon, 
+                    k->data.khachhang, k->data.ngay_nhap.ngay, k->data.ngay_nhap.thang, 
+                    k->data.ngay_nhap.nam, k->data.CTHD->maHoadon, k->data.soLuongCTHD, k->data.tongTien);    
+    }
+
+    fclose(f);
+}
+
+void docFile_Hoadon(HD_List &ds, int *slg_HD)
+{
+    FILE *f = fopen("Hoadon.txt", "r");
+    if (f == NULL)
+    {
+        printf("\nKhong the mo file");
+        _getch();
+        return;
+    }
+
+    int ktra;
+    Hoadon dulieu;
+    HD_Node *tmp = ds.head;
+    
+    while ((ktra = fscanf(f, "%-20s %-20s %d/%d/%-10d %-10d %20f", 
+                            dulieu.maHoadon,dulieu.khachhang.tenKH, &dulieu.ngay_nhap.ngay,
+                            &dulieu.ngay_nhap.thang, &dulieu.ngay_nhap.nam, 
+                            &dulieu.soLuongCTHD, &dulieu.tongTien)) == 7)
+    {
+        HD_Node *p = create_HD_Node(dulieu);
+        int find = 0;
+        while (tmp != NULL)
+        {
+            if (strcmp(tmp->data.maHoadon, p->data.maHoadon) == 0)
+            {
+                find = 1;
+                free(p);
+                break;
+            }
+            tmp = tmp->next;
+        }
+
+        tmp = ds.head;
+        if (find != 1)
+        {
+            if (ds.head == NULL)
+            {
+                ds.head = ds.tail = p;
+            }
+            else
+            {
+                ds.tail->next = p;
+                ds.tail = p;
+            }
+            (*slg_HD)++;
+        }
+    }
+    fclose(f);
+}
+
+
+void ghiFIle_ChitietHoadon(CTHD_List ds)
+{
+    FILE *f = fopen("ChitietHoadon.txt", "w");
+    if (f == NULL)
+    {
+        printf("\nKhong mo duoc file");
+        _getch();
+        return;
+    }
+
+    for (CTHD_Node *k = ds.head; k != NULL; k = k->next)
+    {
+        fprintf(f, "%-20s %-20s %-10d %-20f\n", k->data.maHoadon, 
+                k->data.sanpham.tenSP, k->data.soluong_mua, k->data.tien);    
+    }
+
+    fclose(f);
+}
+
+void docFile_ChitietHoadon(CTHD_List &ds, int *slg_CTHD)
+{
+    FILE *f = fopen("ChitietHoadon.txt", "r");
+    if (f == NULL)
+    {
+        printf("\nKhong the mo file");
+        _getch();
+        return;
+    }
+
+    int ktra;
+    ChitietHoadon dulieu;
+    CTHD_Node *tmp = ds.head;
+    
+    while ((ktra = fscanf(f, "%-20s %-20s %-10d %-20f", dulieu.maHoadon, 
+                        dulieu.sanpham.tenSP, &dulieu.soluong_mua, &dulieu.tien)) == 4)
+    {
+        CTHD_Node *p = create_CTHD_Node(dulieu);
+        int find = 0;
+        while (tmp != NULL)
+        {
+            if (strcmp(tmp->data.maHoadon, p->data.maHoadon) == 0 
+                        && strcmp(tmp->data.sanpham.tenSP, p->data.sanpham.tenSP) == 0)
+            {
+                find = 1;
+                free(p);
+                break;
+            }
+            tmp = tmp->next;
+        }
+
+        tmp = ds.head;
+        if (find != 1)
+        {
+            if (ds.head == NULL)
+            {
+                ds.head = ds.tail = p;
+            }
+            else
+            {
+                ds.tail->next = p;
+                ds.tail = p;
+            }
+            (*slg_CTHD)++;
+        }
+    }
+    fclose(f);
+}
