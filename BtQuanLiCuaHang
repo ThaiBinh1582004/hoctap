@@ -32,9 +32,50 @@ struct ChitietHoadon
     char maHoadon[50];
     Hanghoa sanpham;
     int soluong_mua;
-    double tien; //tien = soluong_mua * giaBan(1sp)
+    double tien;      //tien = soluong_mua * giaBan(1sp)
 };
  
+//CHÚ Ý ĐÂY LÀ ĐOẠN GIẢI THÍCH CHO PHẦN TÍNH TIỀN CỦA CHI TIẾT HOÁ ĐƠN
+// // Tạo một sản phẩm mới
+// Hanghoa newHH;
+// strcpy(newHH.tenSP, "Sản phẩm A");
+// newHH.soLuong = 100;
+// newHH.giaBan = 5000;
+
+// // Thêm sản phẩm mới vào danh sách sản phẩm
+// HH_Node *hh_node = new HH_Node;
+// hh_node->data = newHH;
+// hh_node->next = NULL;
+
+// if (hh_list.head == NULL) {
+//     hh_list.head = hh_list.tail = hh_node;
+// }
+// else {
+//     hh_list.tail->next = hh_node;
+//     hh_list.tail = hh_node;
+// }
+
+// // Tạo chi tiết hóa đơn
+// ChitietHoadon newCTHD;
+// strcpy(newCTHD.maHoadon, "HD001");
+// newCTHD.soluong_mua = 10;
+
+// Tính tiền cho chi tiết hóa đơn
+// void tinhTien(ChitietHoadon *cthd, HH_List ds_hh) {
+//     // Duyệt danh sách hàng hóa để tìm sản phẩm tương ứng với chi tiết hóa đơn
+//     HH_Node *node = ds_hh.head;
+//     while (node != NULL) {
+//         if (strcmp(node->data.tenSP, cthd->sanpham.tenSP) == 0) {
+//             // Tìm được sản phẩm tương ứng, tính tiền cho chi tiết hóa đơn
+//             cthd->tien = cthd->soluong_mua * node->data.giaBan;
+//             break;
+//         }
+//         node = node->next;
+//     }
+// }
+// newCTHD.tien = tinhTien(newCYHD, HH_List ds);
+
+
 struct Hoadon
 {
     char maHoadon[50];
