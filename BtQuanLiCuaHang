@@ -13,6 +13,7 @@ struct Date
 
 struct Khachhang
 {
+    char maKH[100];
     char tenKH[100];
     int tuoi;
     char gioiTinh[10];
@@ -80,7 +81,7 @@ struct Hoadon
 {
     char maHoadon[50];
     Khachhang khachhang;
-    Date ngay_nhap;
+    Date ngay_nhap;   //Dua vao ngay_nhap de xac dinh doanh thu theo ngay
     ChitietHoadon *CTHD; // Con trỏ trỏ đến danh sách các chi tiết hóa đơn
     int soLuongCTHD; // Số lượng chi tiết hóa đơn
     double tongTien;
@@ -231,7 +232,7 @@ void ghiFIle_Khachhang(KH_List ds)
 
     for (KH_Node *k = ds.head; k != NULL; k = k->next)
     {
-        fprintf(f, "%-20s %-10d %-10s %-20s\n", k->data.tenKH, k->data.tuoi, 
+        fprintf(f, "%-20s %-20s %-10d %-10s %-20s\n",k->data.maKH, k->data.tenKH, k->data.tuoi, 
                                             k->data.gioiTinh, k->data.Sdt);    
     }
 
@@ -252,8 +253,8 @@ void docFile_Khachhang(KH_List &ds, int *slg_KH)
     Khachhang dulieu;
     KH_Node *tmp = ds.head;
     
-    while ((ktra = fscanf(f, "%20s %10d %10s %20s", dulieu.tenKH, 
-                &dulieu.tuoi, dulieu.gioiTinh, dulieu.Sdt)) == 4)
+    while ((ktra = fscanf(f, "%20s %20s %10d %10s %20s",dulieu.maKH, dulieu.tenKH, 
+                &dulieu.tuoi, dulieu.gioiTinh, dulieu.Sdt)) == 5)
     {
         KH_Node *p = create_KH_Node(dulieu);
         int find = 0;
