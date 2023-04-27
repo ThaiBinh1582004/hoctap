@@ -79,6 +79,7 @@ struct ChitietHoadon
 
 struct Hoadon
 {
+    CTHD_List dscthd;
     char maHoadon[50];
     Khachhang khachhang;
     Date ngay_nhap;   //Dua vao ngay_nhap de xac dinh doanh thu theo ngay
@@ -490,4 +491,38 @@ void docFile_ChitietHoadon(CTHD_List &ds, int *slg_CTHD)
         }
     }
     fclose(f);
+}
+HD_Node* HoaDonMax(HD_List ds)
+{
+	if(ds.head==NULL)
+	return NULL;
+       HD_Node* hdmax= ds.head;
+       for(HD_Node* k = ds.head;k!=NULL; k=k->next)
+	   {
+	   	if(k.data->tongTien>hdmax.data->tongTien)
+	   	{
+		   hdmax = k;	
+		}
+		}
+		return hdmax; 
+}
+void timHoaDon(HD_List ds, char maHoaDon[])
+{
+	if(ds.head==NULL)
+	return NULL;
+	HD_Node* p = ds.head;
+	for(HD_Node* k=ds.head;k!=NULL;k=k->next)
+	{
+		if(strcmp(k.data->maHoadon,maHoaDon)==0)
+		{
+			printf("\nThong tin hoa don: ");
+			xuatthongtin_HD(k);
+			for(CTHD_Node *h=k.data->dscthd.head;h!=NULL;h=h->next) 
+			{
+				xuatthongtin_CTHD(h);
+			}
+			return; 
+		}
+	}
+	printf("\nKhong tim thay hoa don co ma hoa don: %s",maHoaDon);
 }
