@@ -439,8 +439,9 @@ void ghiFIle_Hoadon(HD_List ds)
 
     for (HD_Node *k = ds.head; k != NULL; k = k->next)
     {
-        fprintf(f, "%-20s %-20s %d/%d/%-10d %-10d %-20.0lf\n", k->data.maHoadon, 
-                    k->data.khachhang.tenKH, k->data.ngay_nhap.ngay, k->data.ngay_nhap.thang, 
+        fprintf(f, "%-20s %-20s %-20s %d/%d/%-10d %-10d %-20.0lf\n", k->data.maHoadon, 
+                    k->data.khachhang.maKH, k->data.khachhang.tenKH, 
+                    k->data.ngay_nhap.ngay, k->data.ngay_nhap.thang, 
                     k->data.ngay_nhap.nam, k->data.soLuongCTHD, k->data.tongTien);    
     }
 
@@ -461,10 +462,10 @@ void docFile_Hoadon(HD_List &HD_list, CTHD_List CTHD_list, int *slg_HD, int *slg
     Hoadon dulieu;
     HD_Node *tmp_HD = HD_list.head;
 
-    while ((ktra = fscanf(f, "%20s %20s %d/%d/%10d %10d %20lf", 
-                            dulieu.maHoadon, dulieu.khachhang.tenKH, &dulieu.ngay_nhap.ngay,
-                            &dulieu.ngay_nhap.thang, &dulieu.ngay_nhap.nam, 
-                            &dulieu.soLuongCTHD, &dulieu.tongTien)) == 7)
+    while ((ktra = fscanf(f, "%20s %20s %20s %d/%d/%10d %10d %20lf", 
+                            dulieu.maHoadon, dulieu.khachhang.maKH, dulieu.khachhang.tenKH, 
+                            &dulieu.ngay_nhap.ngay, &dulieu.ngay_nhap.thang, &dulieu.ngay_nhap.nam, 
+                            &dulieu.soLuongCTHD, &dulieu.tongTien)) == 8)
     {
         HD_Node *p = create_HD_Node(dulieu);
         int find = 0;
@@ -607,6 +608,7 @@ void nhapthongtin_hoadon(Hoadon &hd)
 void xuatthongtin_hoadon(Hoadon hd)
 {
     printf("\nMa hoa don: %s",hd.maHoadon);
+    printf("\nMa khach hang: %s", hd.khachhang.maKH);
     printf("\nTen khach hang: %s", hd.khachhang.tenKH);
     printf("\nNgay nhap tao hoa don: %d/%d/%d",hd.ngay_nhap.ngay,hd.ngay_nhap.thang,hd.ngay_nhap.nam);
     printf("\nSo luong CTHD: %d", hd.soLuongCTHD);
@@ -711,6 +713,7 @@ int ktra_KH(KH_List KH_list, Khachhang kh)
     {
         if (strcmp(tmp->data.tenKH, kh.tenKH) == 0)
             return 1;
+        tmp = tmp->next;
     }
     return 0;
 }
@@ -729,7 +732,7 @@ int ktra_CTHD(HH_List HH_list, ChitietHoadon cthd)
     return 0;
 }
 
-void them_KH(KH_List &KH_list, int *slg_KH, Khachhang kh)
+void them_KH(KH_List &KH_list, int *slg_KH, Khachhang &kh)
 {
     printf("\nKhach hang %s lan dau mua tai cua hang.", kh.tenKH);
     printf("\nVui long nhap thong tin khach hang: \n");
@@ -758,12 +761,26 @@ void them_HD(HD_List &HD_list, CTHD_List &CTHD_list, HH_List HH_list, KH_List &K
 {
     Hoadon HD;
     nhapthongtin_hoadon(HD);
-    HD_Node *tmp_HD = create_HD_Node(HD);
+
+    
     if (ktra_KH(KH_list, HD.khachhang) == 0)
-    {
+    {   
         Khachhang tmp = HD.khachhang;
         them_KH(KH_list, slg_KH, tmp);
+        strcpy(HD.khachhang.maKH, tmp.maKH);
     }
+    else
+    {
+        KH_Node *tmp_KH = KH_list.head;
+        while (tmp_KH != NULL)
+        {
+            if (strcmp(HD.khachhang.tenKH, tmp_KH->data.tenKH) == 0)
+                strcpy(HD.khachhang.maKH, tmp_KH->data.maKH);
+            tmp_KH = tmp_KH->next;
+        }
+    }
+
+    HD_Node *tmp_HD = create_HD_Node(HD);
     int i = 1;
     while (i <= tmp_HD->data.soLuongCTHD)
     {
@@ -810,15 +827,277 @@ void in_Hoadon(HD_List HD_list)
     {
         printf("\n\t--- HD %d ---", ++i);
         xuatthongtin_hoadon(tmp->data);
-        int i = 0;
-        for (CTHD_Node *h = tmp->data.CTHDHead; h != NULL; h = h->next)
-        {
-        printf("\n\t--- CTHD %d---", ++i);
-        xuatthongtin_chitiethoadon(h->data);
-        }
+        // int i = 0;
+        // for (CTHD_Node *h = tmp->data.CTHDHead; h != NULL; h = h->next)
+        // {
+        //     printf("\n  **** CTHD %d ****", ++i);
+        //     xuatthongtin_chitiethoadon(h->data);
+        // }
         tmp = tmp->next;
     }
     _getch();
+}
+
+void SX_HD_tongTien_giam(HD_List &HD_list)
+{
+    for (HD_Node *i = HD_list.head; i != NULL; i = i->next)
+    {
+        for (HD_Node *j = i->next; j != NULL; j = j->next)
+        {
+            if (i->data.tongTien < j->data.tongTien)
+            {
+                Hoadon tmp = i->data;
+                i->data = j->data;
+                j->data = tmp;
+            }
+        }
+    }
+}
+
+void SX_HD_maKH_tang(HD_List &HD_list)
+{
+    for (HD_Node *i = HD_list.head; i != NULL; i = i->next)
+    {
+        for (HD_Node *j = i->next; j != NULL; j = j->next)
+        {
+            if (strcmp(i->data.khachhang.maKH, j->data.khachhang.maKH) > 0)
+            {
+                Hoadon tmp = i->data;
+                i->data = j->data;
+                j->data = tmp;
+            }
+        }
+    }
+}
+
+void HD_tongTien_max(HD_List HD_list)
+{
+    HD_Node *max = HD_list.head;
+    HD_Node *k = HD_list.head->next;
+    while (k != NULL)
+    {
+        if (k->data.tongTien > max->data.tongTien)
+            max = k;
+        k = k->next;
+    }
+
+    k = HD_list.head;
+    printf("\nCac hoa don co tong tien lon nhat la:  ");
+    printf("\n--------------------------------------");
+    while (k != NULL)
+    {
+        if (k->data.tongTien == max->data.tongTien)
+        {
+            printf("\n");
+            xuatthongtin_hoadon(max->data);
+        }
+        k = k->next;
+    }
+}
+
+HD_Node *timKiem_HD_maHD(HD_List HD_list, char maHD[])
+{
+    HD_Node *tmp = HD_list.head;
+    while (tmp != NULL)
+    {
+        if (strcmp(tmp->data.maHoadon, maHD) == 0)
+            return tmp;
+        tmp = tmp->next;
+    }
+    return NULL;
+}
+
+void lietKe_HD_maKH(HD_List HD_list, char maKH[])
+{
+    HD_Node *tmp = HD_list.head;
+    printf("\nCac hoa don co ma khach hang: %s", maKH);
+    printf("\n----------------------------------");
+    while (tmp != NULL)
+    {
+        int i = 0;
+        if (strcmp(tmp->data.khachhang.maKH, maKH) == 0)
+        {
+            printf("\n >>>>> HD %d <<<<<", ++i);
+            xuatthongtin_hoadon(tmp->data);
+        }
+        tmp = tmp->next;
+    }   
+}
+
+void thongKe_doanhThu_ngay(HD_List HD_List, int ngay, int thang, int nam)
+{
+    HD_Node *tmp = HD_List.head;
+    double tong = 0;
+    int i = 0;
+    while (tmp != NULL)
+    {
+        if (tmp->data.ngay_nhap.ngay == ngay && 
+            tmp->data.ngay_nhap.thang == thang &&
+            tmp->data.ngay_nhap.nam == nam)
+        {
+            printf("\n >>>>> HD %d <<<<<", ++i);
+            xuatthongtin_hoadon(tmp->data);
+            tong = tong + tmp->data.tongTien;
+        }
+        tmp = tmp->next;
+    }
+    printf("\n============================\n");
+    printf("\nTong doanh thu cua ngay %d/%d/%d la: %0.0lf", ngay, thang, nam, tong);
+}
+
+void thongKe_doanhThu_thang(HD_List HD_List, int thang, int nam)
+{
+    HD_Node *tmp = HD_List.head;
+    double tong = 0;
+    int i = 0;
+    while (tmp != NULL)
+    {
+        if (tmp->data.ngay_nhap.thang == thang &&
+            tmp->data.ngay_nhap.nam == nam)
+        {
+            printf("\n >>>>> HD %d <<<<<", ++i);
+            xuatthongtin_hoadon(tmp->data);
+            tong = tong + tmp->data.tongTien;
+        }
+        tmp = tmp->next;
+    }
+    printf("\n============================\n");
+    printf("\nTong doanh thu cua thang %d/%d la: %0.0lf", thang, nam, tong);
+}
+
+void thongKe_doanhThu_nam(HD_List HD_List, int nam)
+{
+    HD_Node *tmp = HD_List.head;
+    double tong = 0;
+    int i = 0;
+    while (tmp != NULL)
+    {
+        if (tmp->data.ngay_nhap.nam == nam)
+        {
+            printf("\n >>>>> HD %d <<<<<", ++i);
+            xuatthongtin_hoadon(tmp->data);
+            tong = tong + tmp->data.tongTien;
+        }
+        tmp = tmp->next;
+    }
+    printf("\n============================\n");
+    printf("\nTong doanh thu cua nam %d la: %0.0lf", nam, tong);
+}
+
+void thongKe_doanhThu_quy(HD_List HD_List, int quy, int nam)
+{
+    HD_Node *tmp = HD_List.head;
+    double tong = 0;
+    int i = 0;
+    while (tmp != NULL)
+    {
+        if (tmp->data.ngay_nhap.nam == nam)
+        {
+            if (quy == 1)
+            {
+                if (tmp->data.ngay_nhap.thang >= 1 && tmp->data.ngay_nhap.thang <= 3)
+                {
+                    printf("\n >>>>> HD %d <<<<<", ++i);
+                    xuatthongtin_hoadon(tmp->data);
+                    tong = tong + tmp->data.tongTien;
+                }
+            }
+
+            if (quy == 2)
+            {
+                if (tmp->data.ngay_nhap.thang >= 4 && tmp->data.ngay_nhap.thang <= 6)
+                {
+                    printf("\n >>>>> HD %d <<<<<", ++i);
+                    xuatthongtin_hoadon(tmp->data);
+                    tong = tong + tmp->data.tongTien;
+                }
+            }
+
+            if (quy == 3)
+            {
+                if (tmp->data.ngay_nhap.thang >= 7 && tmp->data.ngay_nhap.thang <= 9)
+                {
+                    printf("\n >>>>> HD %d <<<<<", ++i);
+                    xuatthongtin_hoadon(tmp->data);
+                    tong = tong + tmp->data.tongTien;
+                }
+            }
+
+            if (quy == 4)
+            {
+                if (tmp->data.ngay_nhap.thang >= 10 && tmp->data.ngay_nhap.thang <= 12)
+                {
+                    printf("\n >>>>> HD %d <<<<<", ++i);
+                    xuatthongtin_hoadon(tmp->data);
+                    tong = tong + tmp->data.tongTien;
+                }
+            }
+        }
+        tmp = tmp->next;
+    }
+    printf("\n============================\n");
+    printf("\nTong doanh thu cua nam %d la: %0.0lf", nam, tong);
+}
+
+void thongKe_doanhThu_ngay_thang_nam(HD_List HD_list)
+{
+    printf("\nBan muon thong ke doanh thu theo: ");
+    printf("\n\t1. Ngay");
+    printf("\n\t2. Thang");
+    printf("\n\t3. Nam");
+    printf("\n\t4. Quy");
+
+    int lc;
+    printf("\nVui long nhap lua chon: ");
+    scanf("%d", &lc);
+
+    switch (lc)
+    {
+    case 1:
+        {
+            Date ngay;
+            printf("\nNhap vao ngay ban muon thong ke (nagy/thang/nam): ");
+            scanf("%d/%d/%d", &ngay.ngay, &ngay.thang, &ngay.nam);
+            printf("\nCac hoa don cua ngay: %d/%d/%d", ngay.ngay, ngay.thang, ngay.nam);
+            printf("\n--------------------------------");
+            thongKe_doanhThu_ngay(HD_list, ngay.ngay, ngay.thang, ngay.nam);
+            break;
+        }
+        break;
+    case 2:
+        {
+            int thang, nam;
+            printf("\nNhap vao thang ban muon thong ke (thang/nam): ");
+            scanf("%d/%d", &thang, &nam);
+            printf("\nCac hoa don cua thang: %d/%d", thang, nam);
+            printf("\n--------------------------------");
+            thongKe_doanhThu_thang(HD_list, thang, nam);
+            break;
+        }
+        break;
+    case 3:
+        {
+            int nam;
+            printf("\nNhap vao nam ban muon thong ke: ");
+            scanf("%d", &nam);
+            printf("\nCac hoa don cua nam: %d", nam);
+            printf("\n--------------------------------");
+            thongKe_doanhThu_nam(HD_list, nam);
+            break;
+        }
+        break;
+    case 4:
+        {
+            int nam, quy;
+            printf("\nNhap vao quy ban muon thong ke (quy/nam): ");
+            scanf("%d/%d", &quy, &nam);
+            printf("\nCac hoa don cua quy: %d", nam);
+            printf("\n--------------------------------");
+            thongKe_doanhThu_quy(HD_list, quy, nam);
+            break;
+        }
+        break;
+    }
 }
 
 
@@ -846,12 +1125,18 @@ int main()
     {
         system("cls");
         printf("---------------- MENU ------------------");
-        printf("\n\t1. Them hoa don va cac chi tiet hoa don tuong ung");
-        printf("\n\t2. Them hoa don.");
-        printf("\n\t3. In chi tiet chi tiet hoa don");
-        printf("\n\t4. In chi tiet khach hang");
-        printf("\n\t5. In chi tiet hoa don");
-        printf("\n\t6. In chi hang hoa");
+        printf("\n\t1.  Them hoa don va cac chi tiet hoa don tuong ung");
+        printf("\n\t2.  Them hoa don.");
+        printf("\n\t3.  In chi tiet chi tiet hoa don");
+        printf("\n\t4.  In chi tiet khach hang");
+        printf("\n\t5.  In chi tiet hoa don");
+        printf("\n\t6.  In chi hang hoa");
+        printf("\n\t7.  Sap xep hoa don giam dan theo tong tien");
+        printf("\n\t8.  Sap xep hoa don tang dan theo ma khach hang");
+        printf("\n\t9.  Hoa don co tong tien lon nhat");
+        printf("\n\t10. Tim kiem hoa don dua tren ma Hoa don");
+        printf("\n\t11. Liet ke thong tin hoa don dua theo ma khach hang");
+        printf("\n\t12. Thong ke doanh thu theo ngay/thang/quy/nam");
         printf("\n\t0. Thoat!");
         printf("\n---------------- END ------------------");
 
@@ -898,19 +1183,6 @@ int main()
         }
         case 5: 
         {
-            // int i = 0;
-            // for (HD_Node *k = HD_list.head; k != NULL; k = k->next)
-            // {
-            //     printf("\n\t--- HD %d ---", ++i);
-            //     xuatthongtin_hoadon(k->data);
-            //     int i = 0;
-            //     for (CTHD_Node *h = k->data.CTHD_list.head; k != NULL; k = k->next)
-            //     {
-            //         printf("\n--- CTHD %d---", ++i);
-            //         xuatthongtin_chitiethoadon(h->data);
-            //     }
-            // }
-            // _getch();
             in_Hoadon(HD_list);
             break;
         }
@@ -922,6 +1194,63 @@ int main()
                 printf("\n\t--- HH %d ---", ++i);
                 xuatthongtin_hanghoa(k->data);
             }
+            _getch();
+            break;
+        }
+        case 7:
+        {
+            SX_HD_tongTien_giam(HD_list);
+            break;
+        }
+        case 8: 
+        {
+            SX_HD_maKH_tang(HD_list);
+            break;
+        }
+        case 9:
+        {
+            HD_tongTien_max(HD_list);
+            _getch();
+            break;
+        }
+        case 10:
+        {
+            char maHD[50];
+            printf("\nNhap vao ma hoa don can tim: ");
+            scanf("%s", maHD);
+            HD_Node *timkiem = timKiem_HD_maHD(HD_list, maHD);
+            if (timkiem == NULL)
+            {
+                printf("\nKhong tim thay hoa don co ma hoa don %s trong danh sach hoa don", maHD);
+            }
+            else
+            {
+                printf("\nThong tin mua hoa don co ma %s", maHD);
+                printf("\n-------------------------------");
+                xuatthongtin_hoadon(timkiem->data);
+                printf("\n");
+                int i = 0;
+                for (CTHD_Node *h = timkiem->data.CTHDHead; h != NULL; h = h->next)
+                {
+                    printf("\n >>>>> CTHD %d <<<<<", ++i);
+                    xuatthongtin_chitiethoadon(h->data);
+                }
+            }
+            _getch();
+            break;
+        }
+        case 11: 
+        {
+            printf("\nNhap vao ma khach hang cua hoa don ban muon tim: ");
+            char maKH[100];
+            scanf("%s", maKH);
+            lietKe_HD_maKH(HD_list, maKH);
+            _getch();
+            break;
+        }
+        case 12: 
+        {
+            thongKe_doanhThu_ngay_thang_nam(HD_list);
             _getch();
             break;
         }
